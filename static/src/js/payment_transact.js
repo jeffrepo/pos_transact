@@ -6,7 +6,7 @@ var rpc = require('web.rpc');
 var PaymentInterface = require('point_of_sale.PaymentInterface');
 const { Gui } = require('point_of_sale.Gui');
 var models = require('point_of_sale.models');
-models.load_fields('res.company', 'emp_cod');
+// models.load_fields('res.company', 'emp_cod');
 var _t = core._t;
 
 var PaymentTransact = PaymentInterface.extend({
@@ -122,23 +122,23 @@ var PaymentTransact = PaymentInterface.extend({
         //   moneda_iso = any_fields['moneda_iso']
         //   hash = any_fields['hash']
         // }
-        // var data = {
-        //     'emisor_id':0,
-        //     'emp_cod':emp_cod,
-        //     'emp_hash':hash,
-        //     'factura_consumidor_final':'true',
-        //     'factura_monto':100,
-        //     'factura_monto_gravado':100,
-        //     'factura_monto_iva':100,
-        //     'factura_nro':1234,
-        //     'moneda_iso':moneda_iso,
-        //     'monto':100,
-        //     'monto_cash_back':0,
-        //     'monto_propina':0,
-        //     'operacion':'VTA',
-        //     'tarjeta_id':0,
-        //     'term_cod':'T00001'
-        // };
+        var data = {
+            'emisor_id':0,
+            'emp_cod':'NEWAGE',
+            'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
+            'factura_consumidor_final':'true',
+            'factura_monto':100,
+            'factura_monto_gravado':100,
+            'factura_monto_iva':100,
+            'factura_nro':1234,
+            'moneda_iso':'0858',
+            'monto':100,
+            'monto_cash_back':0,
+            'monto_propina':0,
+            'operacion':'VTA',
+            'tarjeta_id':0,
+            'term_cod':'T00001'
+        };
         // console.log('data --');
         // console.log(data);
         // console.log(config);
@@ -195,23 +195,23 @@ var PaymentTransact = PaymentInterface.extend({
         //   moneda_iso = any_fields['moneda_iso']
         //   hash = any_fields['hash']
         // }
-        // var data = {
-        //     'emisor_id':0,
-        //     'emp_cod':emp_cod,
-        //     'emp_hash':hash,
-        //     'factura_consumidor_final':'true',
-        //     'factura_monto':100,
-        //     'factura_monto_gravado':100,
-        //     'factura_monto_iva':100,
-        //     'factura_nro':1234,
-        //     'moneda_iso':moneda_iso,
-        //     'monto':100,
-        //     'monto_cash_back':0,
-        //     'monto_propina':0,
-        //     'operacion':'VTA',
-        //     'tarjeta_id':0,
-        //     'term_cod':'T00001'
-        // };
+        var data = {
+            'emisor_id':0,
+            'emp_cod':'NEWAGE',
+            'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
+            'factura_consumidor_final':'true',
+            'factura_monto':100,
+            'factura_monto_gravado':100,
+            'factura_monto_iva':100,
+            'factura_nro':1234,
+            'moneda_iso':'0858',
+            'monto':100,
+            'monto_cash_back':0,
+            'monto_propina':0,
+            'operacion':'VTA',
+            'tarjeta_id':0,
+            'term_cod':'T00001'
+        };
 
         return this._call_transact(data).then(function (data) {
             // Only valid response is a 200 OK HTTP response which is
