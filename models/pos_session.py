@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import models
-from odoo import _, api, fields
-import logging
+
 
 class PosSession(models.Model):
     _inherit = 'pos.session'
 
-    @api.model
-    def fields_get(self, allfields=None, attributes=None):
-        logging.warning('Función para cargar campos')
-        logging.warning('')
-        fields = super().fields_get(allfields=allfields, attributes=attributes)
-        logging.warning(fields)
-        return fields
+    def _loader_params_pos_payment_method(self):
+        result = super()._loader_params_pos_payment_method()
+        result['search_params']['fields'].append('no_mostrar_pos')
+        result['search_params']['fields'].append('env_app_name')
+        result['search_params']['fields'].append('tarjeta_tipo')
+        return result
