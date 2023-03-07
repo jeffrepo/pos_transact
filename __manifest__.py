@@ -11,11 +11,13 @@
     'depends': ['base','point_of_sale'],
     'data': [
     'views/pos_payment_method_views.xml',
-    'views/res_company_views.xml'
+    'views/res_company_views.xml',
+    'views/pos_order_views.xml'
     ],
     'assets':{
         'point_of_sale.assets': [
-            # 'pos_transact/static/src/xml/Screens/PaymentScreen/PaymentScreen.xml',
+            'pos_transact/static/src/xml/Screens/PaymentScreen/PaymentScreen.xml',
+            'pos_transact/static/src/xml/Screens/ReceiptScreen/OrderReceipt.xml',
             'pos_transact/static/src/js/payment_transact.js',
             'pos_transact/static/src/js/PaymentScreen.js',
             'pos_transact/static/src/js/models.js',

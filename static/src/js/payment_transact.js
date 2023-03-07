@@ -13,11 +13,65 @@ var PaymentTransact = PaymentInterface.extend({
 
     send_payment_request: function (cid) {
       this._super.apply(this, arguments);
-      var line = this.pos.get_order().selected_paymentline;
+      // var line = this.pos.get_order().selected_paymentline;
       var order = this.pos.get_order();
-      this._reset_state();
-      return this._transact_pay(cid);
+      console.log('');
+      console.log('');
+      console.log('Order en pos_transact');
+      console.log(order);
+      console.log('');
+      console.log('');
+      // console.log('Pendiente de pago');
+      // console.log(line);
+      console.log('');
+      console.log('');
+      console.log('');
+      console.log("was canceled")
+      console.log(this.was_cancelled)
+
+
+      var line = this.pending_transact_line();
+        if (line){
+            console.log(line.get_payment_status())
+        }
+
+      if (order.partner && order.partner.city && order.partner.address && order.partner.state_id){
+        console.log("");
+        console.log("Seleccionando cliente");
+        console.log("");
+
+        this._reset_state();
+        return this._transact_pay(cid);
+      }else{
+        // order.paymentlines = null;
+
+        if (line) {
+            console.log('LINE')
+            console.log(line)
+            //line.was_cancelled = !!self.polling;
+            line.set_payment_status('cancel')
+            this.was_cancelled = true;
+
+            //line.selected = false;
+            //payment_status('retry');
+            //Promise.reject(line);
+            // this.showPopup('ErrorPopup', {
+            //     title: this.env._t('Missing Customer'),
+            //     body: this.env._t("You must have a client assigned"),
+            // });
+            Gui.showPopup('ErrorPopup',{
+                'title': 'Missing Customer',
+                'body': 'You must have a client assigned',
+            });
+            return;
+
+        }
+
+
+
+      }
     },
+
     send_payment_cancel: function (order, cid) {
         this._super.apply(this, arguments);
         return this._transact_cancel();
@@ -44,6 +98,11 @@ var PaymentTransact = PaymentInterface.extend({
 
     _handle_odoo_connection_failure: function (data) {
         // handle timeout
+        console.log('');
+        console.log('_handle_odoo_connection_failure');
+        console.log(data);
+        console.log('');
+        console.log('');
         var line = this.pending_transact_line();
         if (line) {
             line.set_payment_status('retry');
@@ -58,7 +117,6 @@ var PaymentTransact = PaymentInterface.extend({
             model: 'pos.payment.method',
             method: 'proxy_transact_request',
             args: [[this.payment_method.id], data, operation],
-
         }, {
             // When a payment terminal is disconnected it takes Adyen
             // a while to return an error (~6s). So wait 10 seconds
@@ -66,7 +124,22 @@ var PaymentTransact = PaymentInterface.extend({
             timeout: 10000,
             shadow: true,
         }).catch(this._handle_odoo_connection_failure.bind(this));
+        // .then(function (status) {
+        //   console.log('Solo quiero ver que me devolvio...');
+        //   console.log(status);
+        // });
     },
+
+    // token_order: function(){
+    //   return rpc.query({
+    //     model: 'pos.payment.method',
+    //     method: 'token_order',
+    //     args: [[]],
+    //   },{
+    //     timeout: 10000,
+    //     shadow: true,
+    //   })
+    // },
 
     _transact_get_sale_id: function () {
         var config = this.pos.config;
@@ -90,55 +163,58 @@ var PaymentTransact = PaymentInterface.extend({
 
     _transact_pay_data: function () {
         var order = this.pos.get_order();
+        const order_1 = this.currentOrder;
         var config = this.pos.config;
         var line = order.selected_paymentline;
         var self = this;
-
-        // var any_fields = new Promise(function () {
-        //     // clear previous intervals just in case, otherwise
-        //     // it'll run forever
-        //     clearTimeout(self.polling);
-        //     self._call_fields();
-        //     self.polling = setInterval(function () {
-        //         self._call_fields();
-        //     }, 5500);
-        // });
-        // console.log('');
-        // console.log('');
-        // console.log('------------');
-        // console.log(any_fields);
-        // console.log(any_fields.emp_cod);
-        // console.log(order);
-        // console.log('');
-        // console.log('');
-        // console.log('');
-        //
-        // var emp_cod = "";
-        // var moneda_iso = "";
-        // var hash = "";
-        //
-        // if(any_fields){
-        //   emp_cod = any_fields['emp_cod']
-        //   moneda_iso = any_fields['moneda_iso']
-        //   hash = any_fields['hash']
-        // }
+        console.log("");
+        console.log("");
+        console.log("THIS in _transact_pay_data");
+        console.log(order);
+        console.log(order_1);
+        console.log("");
+        console.log("");
+        console.log("");
         var data = {
             'emisor_id':0,
-            'emp_cod':'NEWAGE',
-            'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
+            // 'emp_cod':'NEWAGE',
+            'emp_cod':'EPIK01',
+            // 'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
+            'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2197',
             'factura_consumidor_final':'true',
-            'factura_monto':100,
-            'factura_monto_gravado':100,
-            'factura_monto_iva':100,
+            'factura_monto': parseFloat(order.selected_paymentline.amount) * 100,
+            'factura_monto_gravado': parseFloat('18,03') * 100,
+            'factura_monto_iva': parseFloat('18,03') * 100,
             'factura_nro':1234,
             'moneda_iso':'0858',
-            'monto':100,
+            'monto': parseFloat('100,00') * 100,
             'monto_cash_back':0,
             'monto_propina':0,
             'operacion':'VTA',
             'tarjeta_id':0,
-            'term_cod':'T00001'
+            'term_cod':'T00001',
         };
+
+
+        // var data = {
+        //     'emisor_id':0,
+        //     // 'emp_cod':'NEWAGE',
+        //     'emp_cod':'EPIK01',
+        //     // 'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
+        //     'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2197',
+        //     'factura_consumidor_final':'true',
+        //     'factura_monto': parseFloat('100,00') * 100,
+        //     'factura_monto_gravado': parseFloat('81,97') * 100,
+        //     'factura_monto_iva': parseFloat('18,03') * 100,
+        //     'factura_nro':1234,
+        //     'moneda_iso':'0858',
+        //     'monto': parseFloat('100,00') * 100,
+        //     'monto_cash_back':0,
+        //     'monto_propina':0,
+        //     'operacion':'VTA',
+        //     'tarjeta_id':0,
+        //     'term_cod':'T00001',
+        // };
         // console.log('data --');
         // console.log(data);
         // console.log(config);
@@ -201,8 +277,8 @@ var PaymentTransact = PaymentInterface.extend({
             'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
             'factura_consumidor_final':'true',
             'factura_monto':100,
-            'factura_monto_gravado':100,
-            'factura_monto_iva':100,
+            'factura_monto_gravado':81.97,
+            'factura_monto_iva':18.07,
             'factura_nro':1234,
             'moneda_iso':'0858',
             'monto':100,
@@ -210,7 +286,8 @@ var PaymentTransact = PaymentInterface.extend({
             'monto_propina':0,
             'operacion':'VTA',
             'tarjeta_id':0,
-            'term_cod':'T00001'
+            'term_cod':'T00001',
+            'modo_emulacion': 'false',
         };
 
         return this._call_transact(data).then(function (data) {
@@ -238,16 +315,23 @@ var PaymentTransact = PaymentInterface.extend({
     },
 
     _poll_for_response: function (resolve, reject) {
+        console.log('');
+        console.log('_poll_for_response 1');
+        console.log('');
+        console.log('');
         var self = this;
+        var order = self.pos.get_order();
         if (this.was_cancelled) {
             resolve(false);
             return Promise.resolve();
         }
 
+        console.log('Consultar transaccion token');
+        console.log(order.get_TokenNro());
         return rpc.query({
             model: 'pos.payment.method',
             method: 'get_latest_transact_status',
-            args: [[this.payment_method.id], this._transact_get_sale_id()],
+            args: [[this.payment_method.id], this._transact_get_sale_id(), order.get_TokenNro()],
         }, {
             timeout: 5000,
             shadow: true,
@@ -263,20 +347,100 @@ var PaymentTransact = PaymentInterface.extend({
             // this promise don't resolve -- that is, it doesn't go to the 'then' clause.
             return Promise.reject(data);
         }).then(function (status) {
-            var notification = status.latest_response;
+            console.log('');
+            console.log('status');
+            console.log(status);
+            var notification = false;
+            if('latest_response' in status){
+              notification = status.latest_response;
+            }else{
+              notification = status
+            }
+
             var order = self.pos.get_order();
             var line = self.pending_transact_line() || resolve(false);
+            console.log('');
             console.log('notification :D');
             console.log(notification);
-            console.log(notification['s:Envelope']['s:Body']);
-            if (notification) {
+            console.log('');
+            console.log('');
+            console.log('');
+            if (notification){
                 console.log('good notification');
+                console.log(notification['a:Resp_TransaccionFinalizada']);
+                console.log('');
+
                 // var response = notification.SaleToPOIResponse.PaymentResponse.Response;
                 // var additional_response = new URLSearchParams(response.AdditionalResponse);
+                if ('a:Resp_TransaccionFinalizada' in notification && notification['a:Aprobada
+'] == 'true'){
+                    console.log('Transacción finalizada');
+                }
 
-                if (notification['s:Envelope']['s:Body']['PostearTransaccionResponse']['PostearTransaccionResult']['a:Resp_CodigoRespuesta'] == '0') {
-                    console.log('Sorry for party rock');
-                    var config = self.pos.config;
+                if ('a:Resp_TokenSegundosReConsultar' in notification && 'a:Resp_TransaccionFinalizada' in notification && notification['a:Resp_TokenSegundosReConsultar'] == '0' && notification['a:Aprobada'] == 'true' ) {
+                  console.log('Buena respuesta');
+                  var config = self.pos.config;
+                  console.log('');
+                  console.log('');
+                  console.log('Order modificar metodo de pago');
+                  console.log(order);
+                  console.log(self);
+                  var metodos_pago = self.pos.payment_methods;
+                  var id_pago = 0;
+                  var monto_total = 0;
+                  var nombre_pago = '';
+                  metodos_pago.forEach((m_p) => {
+                    console.log('metodo de pago');
+                    console.log(m_p);
+                    console.log(notification["a:DatosTransaccion"]["a:Extendida"]["a:EmvAppName"]);
+                    console.log(notification["a:TarjetaTipo"]);
+                    console.log("");
+                    console.log("");
+                    if("a:DatosTransaccion" in notification && "a:Extendida" in notification["a:DatosTransaccion"] && "a:EmvAppName" in notification["a:DatosTransaccion"]["a:Extendida"] && "a:TarjetaTipo" in notification){
+                      console.log('Dicc primer if ');
+                      if(notification["a:DatosTransaccion"]["a:Extendida"]["a:EmvAppName"] == m_p.env_app_name && notification["a:TarjetaTipo"] == m_p.tarjeta_tipo){
+                        console.log("Segundo if");
+                        id_pago = m_p.id
+                        nombre_pago = m_p.name
+                        monto_total = parseFloat(notification["a:DatosTransaccion"]["a:Monto"])
+                        console.log(m_p.env_app_name);
+                        console.log(m_p.tarjeta_tipo);
+                        console.log("");
+                      }
+                    }
+                  });
+                  var posicion = 0
+                  if(id_pago != 0 ){
+                    order.paymentlines.forEach((line) => {
+                      console.log('Line');
+                      console.log(line);
+                      console.log(monto_total);
+                      console.log(line.amount);
+                      console.log('');
+                      // Verificar que el total sea el mismo line.amount y el monto total
+                      if(line.payment_method.use_payment_terminal == "transact"){
+                        console.log('Supuestamente cambiando el id del pago');
+                        console.log(id_pago);
+                        order.paymentlines[posicion].set_nuevo_metodo_pago_id(id_pago);
+                        order.paymentlines[posicion].set_nuevo_metodo_pago_nombre(nombre_pago);
+                        // order.paymentlines[posicion].id = id_pago
+                        // order.paymentlines[posicion].name = nombre_pago;
+                        // order.paymentlines[posicion].payment_method.name = nombre_pago;
+                        // order.paymentlines[posicion].payment_method.id = id_pago;
+
+                      }
+
+                      console.log('');
+                      console.log('');
+                      posicion += 1;
+                    });
+
+                  }
+
+
+                  console.log('');
+                  console.log('');
+                  console.log('');
                     // var payment_response = notification.SaleToPOIResponse.PaymentResponse;
                     // var payment_result = payment_response.PaymentResult;
                     //
@@ -305,19 +469,43 @@ var PaymentTransact = PaymentInterface.extend({
                     // line.transaction_id = additional_response.get('pspReference');
                     // line.card_type = additional_response.get('cardType');
                     // line.cardholder_name = additional_response.get('cardHolderName') || '';
-                    resolve(true);
-                } else {
-                    var message = additional_response.get('message');
-                    self._show_error(_.str.sprintf(_t('Message from TRANSACT: %s'), message));
 
-                    // this means the transaction was cancelled by pressing the cancel button on the device
-                    if (message.startsWith('108 ')) {
-                        resolve(false);
-                    } else {
-                        line.set_payment_status('retry');
-                        reject();
-                    }
+                  console.log('resolve --');
+                  console.log(order);
+                  console.log('');
+                  console.log('');
+                  resolve(true);
+                }else if( 'a:Resp_TokenSegundosReConsultar' in notification && 'a:Resp_TransaccionFinalizada' in notification && notification['a:Resp_TokenSegundosReConsultar'] == '0' && notification['a:Aprobada'] == 'false' ){
+                    resolve(false);
+
+                    Gui.showPopup('ErrorPopup',{
+                        'title': 'Estado transacción',
+                        'body': notification['a:MsgRespuesta'],
+                    });
+
+                    line.set_payment_status('retry');
+                    reject();
                 }
+
+//             else {
+//                     // var message = additional_response.get('message');
+//                     // self._show_error(_.str.sprintf(_t('Message from TRANSACT: %s'), message));
+
+//                     // this means the transaction was cancelled by pressing the cancel button on the device
+//                     console.log('Error ????');
+//                     console.log(notification)
+
+//                     Gui.showPopup('ErrorPopup',{
+//                         'title': notification.error.status_code,
+//                         'body': notification.error.message,
+//                     });
+//                     if (notification.error.status_code == '2') {
+//                         resolve(false);
+//                     } else {
+//                         line.set_payment_status('retry');
+//                         reject();
+//                     }
+//                 }
             } else {
                 line.set_payment_status('waitingCard')
             }
@@ -327,8 +515,26 @@ var PaymentTransact = PaymentInterface.extend({
     _transact_handle_response: function (response) {
         console.log('Response --->');
         console.log(response);
-        var line = this.pending_transact_line();
+        var order = this.pos.get_order();
+        if('tokenNro' in response){
 
+          order.set_TokenNro(response['tokenNro']);
+          console.log('get_token');
+          console.log(order.get_TokenNro());
+
+        }
+        console.log('');
+        console.log('');
+        console.log('Order en _transact_handle_response');
+        console.log(order);
+        console.log('');
+        console.log('');
+        var line = this.pending_transact_line();
+        // var tokenNro = this.token_order();
+        // console.log('Obteniendo el token');
+        // console.log(tokenNro);
+        // console.log('');
+        // console.log('');
         if (response.error && response.error.status_code != 200) {
             this._show_error(_t('Response code: '+response.error.status_code + ' '+ response.error.message));
             line.set_payment_status('force_done');
@@ -336,6 +542,9 @@ var PaymentTransact = PaymentInterface.extend({
         }
 
         response = response.SaleToPOIRequest;
+        console.log('Response ');
+        console.log(response);
+        console.log('');
         if (response && response.EventNotification && response.EventNotification.EventToNotify == 'Reject') {
             console.error('error from TRANSACT', response);
 

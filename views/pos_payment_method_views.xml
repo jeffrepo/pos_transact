@@ -7,6 +7,9 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='use_payment_terminal']" position="after">
                 <!-- transact -->
+                <field name="no_mostrar_pos"/>
+                <field name="tarjeta_tipo"/>
+                <field name="env_app_name"/>
                 <field name="transact_api_key" attrs="{'invisible': [('use_payment_terminal', '!=', 'transact')], 'required': [('use_payment_terminal', '=', 'transact')]}"/>
                 <field name="transact_terminal_identifier" attrs="{'invisible': [('use_payment_terminal', '!=', 'transact')], 'required': [('use_payment_terminal', '=', 'transact')]}"/>
                 <field name="transact_test_mode" attrs="{'invisible': [('use_payment_terminal', '!=', 'transact')], 'required': [('use_payment_terminal', '=', 'transact')]}"/>

@@ -15,6 +15,7 @@ odoo.define('pos_transact.PaymentScreen', function(require) {
                 );
                 console.log("Metodo de pago ::");
                 console.log(pendingPaymentLine);
+
                 if (pendingPaymentLine) {
 
                     const paymentTerminal = pendingPaymentLine.payment_method.payment_terminal;
