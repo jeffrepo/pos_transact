@@ -21,44 +21,48 @@ var PaymentTransact = PaymentInterface.extend({
       console.log(order);
       console.log('');
       console.log('');
-      // console.log('Pendiente de pago');
-      // console.log(line);
-      console.log('');
-      console.log('');
-      console.log('');
-      console.log("was canceled")
-      console.log(this.was_cancelled)
-
 
       var line = this.pending_transact_line();
         if (line){
             console.log(line.get_payment_status())
         }
 
-      if (order.partner && order.partner.city && order.partner.address && order.partner.state_id){
-        console.log("");
-        console.log("Seleccionando cliente");
-        console.log("");
+      if (order.partner){
+          if (order.pos.config.uy_anonymous_id && order.partner.id == order.pos.config.uy_anonymous_id[0]){
+            this._reset_state();
+            return this._transact_pay(cid);
 
-        this._reset_state();
-        return this._transact_pay(cid);
+          }else if(order.partner.city && order.partner.address && order.partner.state_id){
+            this._reset_state();
+            return this._transact_pay(cid);
+          }else{
+
+              if (line) {
+                console.log('LINE')
+                console.log(line)
+
+                line.set_payment_status('cancel')
+                this.was_cancelled = true;
+
+                Gui.showPopup('ErrorPopup',{
+                    'title': 'Missing Customer',
+                    'body': 'You must have a client assigned',
+                });
+                return;
+
+            }
+
+          }
+
       }else{
-        // order.paymentlines = null;
 
         if (line) {
             console.log('LINE')
             console.log(line)
-            //line.was_cancelled = !!self.polling;
+
             line.set_payment_status('cancel')
             this.was_cancelled = true;
 
-            //line.selected = false;
-            //payment_status('retry');
-            //Promise.reject(line);
-            // this.showPopup('ErrorPopup', {
-            //     title: this.env._t('Missing Customer'),
-            //     body: this.env._t("You must have a client assigned"),
-            // });
             Gui.showPopup('ErrorPopup',{
                 'title': 'Missing Customer',
                 'body': 'You must have a client assigned',
@@ -124,22 +128,7 @@ var PaymentTransact = PaymentInterface.extend({
             timeout: 10000,
             shadow: true,
         }).catch(this._handle_odoo_connection_failure.bind(this));
-        // .then(function (status) {
-        //   console.log('Solo quiero ver que me devolvio...');
-        //   console.log(status);
-        // });
     },
-
-    // token_order: function(){
-    //   return rpc.query({
-    //     model: 'pos.payment.method',
-    //     method: 'token_order',
-    //     args: [[]],
-    //   },{
-    //     timeout: 10000,
-    //     shadow: true,
-    //   })
-    // },
 
     _transact_get_sale_id: function () {
         var config = this.pos.config;
@@ -163,66 +152,137 @@ var PaymentTransact = PaymentInterface.extend({
 
     _transact_pay_data: function () {
         var order = this.pos.get_order();
-        const order_1 = this.currentOrder;
         var config = this.pos.config;
         var line = order.selected_paymentline;
         var self = this;
-        console.log("");
-        console.log("");
-        console.log("THIS in _transact_pay_data");
-        console.log(order);
-        console.log(order_1);
-        console.log("");
-        console.log("");
-        console.log("");
-        var data = {
-            'emisor_id':0,
-            // 'emp_cod':'NEWAGE',
-            'emp_cod':'EPIK01',
-            // 'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
-            'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2197',
-            'factura_consumidor_final':'true',
-            'factura_monto': parseFloat(order.selected_paymentline.amount) * 100,
-            'factura_monto_gravado': parseFloat('18,03') * 100,
-            'factura_monto_iva': parseFloat('18,03') * 100,
-            'factura_nro':1234,
-            'moneda_iso':'0858',
-            'monto': parseFloat('100,00') * 100,
-            'monto_cash_back':0,
-            'monto_propina':0,
-            'operacion':'VTA',
-            'tarjeta_id':0,
-            'term_cod':'T00001',
-        };
+        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '';
+
+        console.log('Colocar un popup');
+        console.log(order.get_tax_details());
+        console.log(order.get_total_with_tax());
+        console.log(line);
+
+        if(order.get_tax_details().length != 1 && line.amount != order.get_total_with_tax().toFixed(2)){
+          console.log('No cuadraron los ivas');
+          line.set_payment_status('cancel')
+          this.was_cancelled = true;
+
+          Gui.showPopup('ErrorPopup',{
+              'title': 'Pago Parcial',
+              'body': 'No se puede realizar porque hay Productos con distintos Impuestos',
+          });
 
 
-        // var data = {
-        //     'emisor_id':0,
-        //     // 'emp_cod':'NEWAGE',
-        //     'emp_cod':'EPIK01',
-        //     // 'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
-        //     'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2197',
-        //     'factura_consumidor_final':'true',
-        //     'factura_monto': parseFloat('100,00') * 100,
-        //     'factura_monto_gravado': parseFloat('81,97') * 100,
-        //     'factura_monto_iva': parseFloat('18,03') * 100,
-        //     'factura_nro':1234,
-        //     'moneda_iso':'0858',
-        //     'monto': parseFloat('100,00') * 100,
-        //     'monto_cash_back':0,
-        //     'monto_propina':0,
-        //     'operacion':'VTA',
-        //     'tarjeta_id':0,
-        //     'term_cod':'T00001',
-        // };
-        // console.log('data --');
-        // console.log(data);
-        // console.log(config);
-        if (config.transact_ask_customer_for_tip) {
-            data.SaleToPOIRequest.PaymentRequest.SaleData.SaleToAcquirerData = "tenderOption=AskGratuity";
+        }else {
+
+          if(order.pos.company.emp_cod){
+            emp_cod = order.pos.company.emp_cod
+          }
+          console.log('Entrando al hash');
+          console.log(order.pos.company.hash);
+          if(order.pos.company.hash){
+            console.log('Entrando al hash');
+            console.log(order.pos.company.hash);
+            hash = order.pos.company.hash;
+          }
+          if(order.pos.company.moneda_ISO){
+            moneda_iso = order.pos.company.moneda_ISO;
+          }
+          if(order.uid){
+            var order_uid = order.uid.replace('-','');
+            order_uid = order_uid.replace('-','');
+            factura_nro = order_uid;
+          }
+
+          var factura_monto_iva = 0, new_total_order = 0;
+          var factura_monto_grabado = 0;
+
+          console.log('Para dividir');
+          console.log(order.get_tax_details()[0].tax.amount);
+          console.log(order);
+
+          if(order.get_tax_details().length>1){
+
+            order.get_tax_details().forEach((impuesto) => {
+                factura_monto_iva += impuesto.amount;
+            })
+            console.log('');
+            console.log('');
+            console.log('Vamos a verificar algo');
+            console.log(order.get_orderlines());
+            order.get_orderlines().forEach((x) => {
+              console.log('');
+              console.log(x.get_price_without_tax());
+              console.log(x.get_tax_details());
+
+              for (let key in x.get_tax_details()) {
+                console.log('key');
+                console.log(key);
+                if(x.get_tax_details()[key]>0){
+                  new_total_order += x.get_price_with_tax();
+                }
+              }
+
+
+
+              console.log('');
+              console.log('');
+            })
+            // .get_price_without_tax()
+            console.log('');
+            console.log('');
+            console.log('');
+            console.log('new_total_order');
+            console.log(new_total_order);
+            factura_monto_grabado = new_total_order - factura_monto_iva;
+
+          }else{
+            if(order.get_tax_details()[0].tax.amount > 0){
+              var calculo_iva = 1 + (order.get_tax_details()[0].tax.amount / 100);
+              factura_monto_iva = order.get_tax_details()[0].amount;
+              factura_monto_grabado = order.get_total_with_tax() - factura_monto_iva;
+            }else {
+              factura_monto_iva = 0;
+              factura_monto_grabado = 0;
+            }
+          }
+
+          var partner = "false";
+
+          if(order.pos.config.uy_anonymous_id && order.partner.id == order.pos.config.uy_anonymous_id[0]){
+              partner = "true";
+          }
+
+
+        //Monto grabado es 0 si es exento
+          var data = {
+              'emisor_id':0,
+              'emp_cod':emp_cod,
+              'emp_hash':hash,
+              'factura_consumidor_final':partner,
+              'factura_monto': order.get_total_with_tax() * 100,
+              'factura_monto_gravado': factura_monto_grabado * 100,
+              // 'factura_monto_gravado': 100 * 100,
+              'factura_monto_iva': factura_monto_iva * 100,
+              'factura_nro':factura_nro,
+              'moneda_iso':moneda_iso,
+              'monto': line.amount * 100,
+              'monto_cash_back':0,
+              'monto_propina':0,
+              'operacion':'VTA',
+              'tarjeta_id':0,
+              'term_cod':'T00001',
+          };
+
+          if (config.transact_ask_customer_for_tip) {
+              data.SaleToPOIRequest.PaymentRequest.SaleData.SaleToAcquirerData = "tenderOption=AskGratuity";
+          }
+
+          return data;
+
         }
 
-        return data;
+
     },
 
     _transact_pay: function (cid) {
@@ -251,43 +311,78 @@ var PaymentTransact = PaymentInterface.extend({
         var self = this;
         var config = this.pos.config;
         var previous_service_id = this.most_recent_service_id;
+        var order = this.pos.get_order();
+        var line = order.selected_paymentline;
+        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '';
         var header = _.extend(this._transact_common_message_header(), {
             'MessageCategory': 'Abort',
         });
 
-        // console.log('Llamando a los campos');
-        // var any_fields = this._call_fields();
-        // console.log(any_fields);
-        // console.log(any_fields['emp_cod']);
-        // console.log('');
-        // console.log('');
-        //
-        // var emp_cod = "";
-        // var moneda_iso = "";
-        // var hash = "";
-        //
-        // if(any_fields){
-        //   emp_cod = any_fields['emp_cod']
-        //   moneda_iso = any_fields['moneda_iso']
-        //   hash = any_fields['hash']
-        // }
+        if(order.pos.company.emp_cod){
+          emp_cod = order.pos.company.emp_cod
+        }
+        if(order.pos.company.hash){
+          hash = order.pos.company.hash
+        }
+        if(order.pos.company.moneda_ISO){
+          moneda_iso = order.pos.company.moneda_ISO
+        }
+
+        if(order.uid){
+          var order_uid = order.uid.replace('-','');
+          order_uid = order_uid.replace('-','');
+          factura_nro = order_uid;
+        }
+
+        var factura_monto_iva = 0;
+        var factura_monto_grabado = 0;
+
+        console.log('Para dividir');
+        console.log(order.get_tax_details()[0].tax.amount);
+        console.log(order);
+        if(order.get_tax_details().length>1){
+
+          order.get_tax_details().forEach((impuesto) => {
+              factura_monto_iva += impuesto.amount;
+          })
+
+          factura_monto_grabado = order.get_amount_total_with_tax() - factura_monto_iva;
+
+        }else{
+          if(order.get_tax_details()[0].tax.amount > 0){
+            factura_monto_iva = order.get_tax_details()[0].amount;
+            factura_monto_grabado = order.get_total_with_tax() - factura_monto_iva;
+
+          }else {
+            factura_monto_iva = 0;
+            factura_monto_grabado = 0;
+          }
+        }
+
+        var partner = "false";
+
+        if(order.pos.config.uy_anonymous_id && order.partner.id == order.pos.config.uy_anonymous_id[0]){
+            partner = "true";
+        }
+
+        console.log('consumidor final')
+        console.log(partner)
         var data = {
             'emisor_id':0,
-            'emp_cod':'NEWAGE',
-            'emp_hash':'DF4D21265D1F2F1DDF4D21265D1F2F1D',
-            'factura_consumidor_final':'true',
-            'factura_monto':100,
-            'factura_monto_gravado':81.97,
-            'factura_monto_iva':18.07,
-            'factura_nro':1234,
-            'moneda_iso':'0858',
-            'monto':100,
-            'monto_cash_back':0,
-            'monto_propina':0,
-            'operacion':'VTA',
-            'tarjeta_id':0,
-            'term_cod':'T00001',
-            'modo_emulacion': 'false',
+            'emp_cod':emp_cod,
+            'emp_hash':hash,
+            'factura_consumidor_final':partner,
+            'factura_monto': order.get_total_with_tax() * 100,
+            'factura_monto_gravado': factura_monto_grabado * 100,
+            'factura_monto_iva': factura_monto_iva * 100,
+          'factura_nro':factura_nro,
+          'moneda_iso':moneda_iso,
+          'monto': line.amount * 100,
+          'monto_cash_back':0,
+          'monto_propina':0,
+          'operacion':'VTA',
+          'tarjeta_id':0,
+          'term_cod':'T00001',
         };
 
         return this._call_transact(data).then(function (data) {
@@ -365,7 +460,12 @@ var PaymentTransact = PaymentInterface.extend({
             console.log('');
             console.log('');
             console.log('');
-            if (notification){
+            var error = 'error' in notification;
+            console.log('error in notification');
+            console.log(error);
+            console.log('');
+
+            if (notification && error == false){
                 console.log('good notification');
                 console.log(notification['a:Resp_TransaccionFinalizada']);
                 console.log('');
@@ -380,11 +480,6 @@ var PaymentTransact = PaymentInterface.extend({
                 if ('a:Resp_TokenSegundosReConsultar' in notification && 'a:Resp_TransaccionFinalizada' in notification && notification['a:Resp_TokenSegundosReConsultar'] == '0' && notification['a:Aprobada'] == 'true' ) {
                   console.log('Buena respuesta');
                   var config = self.pos.config;
-                  console.log('');
-                  console.log('');
-                  console.log('Order modificar metodo de pago');
-                  console.log(order);
-                  console.log(self);
                   var metodos_pago = self.pos.payment_methods;
                   var id_pago = 0;
                   var monto_total = 0;
@@ -402,78 +497,25 @@ var PaymentTransact = PaymentInterface.extend({
                         console.log("Segundo if");
                         id_pago = m_p.id
                         nombre_pago = m_p.name
-                        monto_total = parseFloat(notification["a:DatosTransaccion"]["a:Monto"])
-                        console.log(m_p.env_app_name);
-                        console.log(m_p.tarjeta_tipo);
-                        console.log("");
+                        monto_total = parseFloat(notification["a:DatosTransaccion"]["a:Monto"]);
                       }
                     }
                   });
                   var posicion = 0
                   if(id_pago != 0 ){
                     order.paymentlines.forEach((line) => {
-                      console.log('Line');
-                      console.log(line);
-                      console.log(monto_total);
-                      console.log(line.amount);
-                      console.log('');
-                      // Verificar que el total sea el mismo line.amount y el monto total
-                      if(line.payment_method.use_payment_terminal == "transact"){
+                      if(line.payment_method.use_payment_terminal == "transact" && order.paymentlines[posicion].nuevo_metodo_pago_id == false){
                         console.log('Supuestamente cambiando el id del pago');
                         console.log(id_pago);
                         order.paymentlines[posicion].set_nuevo_metodo_pago_id(id_pago);
                         order.paymentlines[posicion].set_nuevo_metodo_pago_nombre(nombre_pago);
-                        // order.paymentlines[posicion].id = id_pago
-                        // order.paymentlines[posicion].name = nombre_pago;
-                        // order.paymentlines[posicion].payment_method.name = nombre_pago;
-                        // order.paymentlines[posicion].payment_method.id = id_pago;
-
                       }
 
-                      console.log('');
-                      console.log('');
                       posicion += 1;
                     });
 
                   }
 
-
-                  console.log('');
-                  console.log('');
-                  console.log('');
-                    // var payment_response = notification.SaleToPOIResponse.PaymentResponse;
-                    // var payment_result = payment_response.PaymentResult;
-                    //
-                    // var cashier_receipt = payment_response.PaymentReceipt.find(function (receipt) {
-                    //     return receipt.DocumentQualifier == 'CashierReceipt';
-                    // });
-                    //
-                    // if (cashier_receipt) {
-                    //     line.set_cashier_receipt(self._convert_receipt_info(cashier_receipt.OutputContent.OutputText));
-                    // }
-                    //
-                    // var customer_receipt = payment_response.PaymentReceipt.find(function (receipt) {
-                    //     return receipt.DocumentQualifier == 'CustomerReceipt';
-                    // });
-                    //
-                    // if (customer_receipt) {
-                    //     line.set_receipt_info(self._convert_receipt_info(customer_receipt.OutputContent.OutputText));
-                    // }
-                    //
-                    // var tip_amount = payment_result.AmountsResp.TipAmount;
-                    // if (config.transact_ask_customer_for_tip && tip_amount > 0) {
-                    //     order.set_tip(tip_amount);
-                    //     line.set_amount(payment_result.AmountsResp.AuthorizedAmount);
-                    // }
-                    //
-                    // line.transaction_id = additional_response.get('pspReference');
-                    // line.card_type = additional_response.get('cardType');
-                    // line.cardholder_name = additional_response.get('cardHolderName') || '';
-
-                  console.log('resolve --');
-                  console.log(order);
-                  console.log('');
-                  console.log('');
                   resolve(true);
                 }else if( 'a:Resp_TokenSegundosReConsultar' in notification && 'a:Resp_TransaccionFinalizada' in notification && notification['a:Resp_TokenSegundosReConsultar'] == '0' && notification['a:Aprobada'] == 'false' ){
                     resolve(false);
@@ -486,27 +528,21 @@ var PaymentTransact = PaymentInterface.extend({
                     line.set_payment_status('retry');
                     reject();
                 }
+            } else if ('error' in notification) {
 
-//             else {
-//                     // var message = additional_response.get('message');
-//                     // self._show_error(_.str.sprintf(_t('Message from TRANSACT: %s'), message));
+              console.log('Existe un error :/');
+              console.log('');
+              resolve(false);
 
-//                     // this means the transaction was cancelled by pressing the cancel button on the device
-//                     console.log('Error ????');
-//                     console.log(notification)
+              Gui.showPopup('ErrorPopup',{
+                  'title': 'Estatus code:' + notification['error']['status_code'],
+                  'body': notification['error']['message'],
+              });
 
-//                     Gui.showPopup('ErrorPopup',{
-//                         'title': notification.error.status_code,
-//                         'body': notification.error.message,
-//                     });
-//                     if (notification.error.status_code == '2') {
-//                         resolve(false);
-//                     } else {
-//                         line.set_payment_status('retry');
-//                         reject();
-//                     }
-//                 }
-            } else {
+              line.set_payment_status('retry');
+              reject();
+
+            }else {
                 line.set_payment_status('waitingCard')
             }
         });
@@ -516,7 +552,7 @@ var PaymentTransact = PaymentInterface.extend({
         console.log('Response --->');
         console.log(response);
         var order = this.pos.get_order();
-        if('tokenNro' in response){
+        if(response && 'tokenNro' in response){
 
           order.set_TokenNro(response['tokenNro']);
           console.log('get_token');
@@ -588,8 +624,8 @@ var PaymentTransact = PaymentInterface.extend({
 
     _show_error: function (msg, title) {
         console.log('the title');
-        console.log(msg);
-        console.log(title);
+        // console.log(msg);
+        // console.log(title);
         if (!title) {
             title =  _t('TRANSACT Error');
         }
