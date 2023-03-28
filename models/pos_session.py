@@ -13,3 +13,10 @@ class PosSession(models.Model):
         result['search_params']['fields'].append('env_app_name')
         result['search_params']['fields'].append('tarjeta_tipo')
         return result
+
+    def _loader_params_res_company(self):
+        result = super()._loader_params_res_company()
+        result['search_params']['fields'].append('moneda_ISO')
+        result['search_params']['fields'].append('hash')
+        result['search_params']['fields'].append('emp_cod')
+        return result
