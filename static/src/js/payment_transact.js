@@ -15,10 +15,7 @@ var PaymentTransact = PaymentInterface.extend({
       this._super.apply(this, arguments);
       // var line = this.pos.get_order().selected_paymentline;
       var order = this.pos.get_order();
-      console.log('');
-      console.log('');
-      console.log('Order en pos_transact');
-      console.log(order);
+      console.log('send_payment_request');
       console.log('');
       console.log('');
 
@@ -38,8 +35,6 @@ var PaymentTransact = PaymentInterface.extend({
           }else{
 
               if (line) {
-                console.log('LINE')
-                console.log(line)
 
                 line.set_payment_status('cancel')
                 this.was_cancelled = true;
@@ -57,8 +52,6 @@ var PaymentTransact = PaymentInterface.extend({
       }else{
 
         if (line) {
-            console.log('LINE')
-            console.log(line)
 
             line.set_payment_status('cancel')
             this.was_cancelled = true;
@@ -155,15 +148,12 @@ var PaymentTransact = PaymentInterface.extend({
         var config = this.pos.config;
         var line = order.selected_paymentline;
         var self = this;
-        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '';
+        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '', term_cod = '';
 
-        console.log('Colocar un popup');
-        console.log(order.get_tax_details());
-        console.log(order.get_total_with_tax());
-        console.log(line);
+        console.log('_transact_pay_data');
+        console.log('');
 
         if(order.get_tax_details().length != 1 && line.amount != order.get_total_with_tax().toFixed(2)){
-          console.log('No cuadraron los ivas');
           line.set_payment_status('cancel')
           this.was_cancelled = true;
 
@@ -175,14 +165,14 @@ var PaymentTransact = PaymentInterface.extend({
 
         }else {
 
+          if(order.pos.config.term_cod){
+            term_cod = order.pos.config.term_cod;
+          }
+
           if(order.pos.company.emp_cod){
             emp_cod = order.pos.company.emp_cod
           }
-          console.log('Entrando al hash');
-          console.log(order.pos.company.hash);
           if(order.pos.company.hash){
-            console.log('Entrando al hash');
-            console.log(order.pos.company.hash);
             hash = order.pos.company.hash;
           }
           if(order.pos.company.moneda_ISO){
@@ -197,43 +187,21 @@ var PaymentTransact = PaymentInterface.extend({
           var factura_monto_iva = 0, new_total_order = 0;
           var factura_monto_grabado = 0;
 
-          console.log('Para dividir');
-          console.log(order.get_tax_details()[0].tax.amount);
-          console.log(order);
-
           if(order.get_tax_details().length>1){
 
             order.get_tax_details().forEach((impuesto) => {
                 factura_monto_iva += impuesto.amount;
             })
-            console.log('');
-            console.log('');
-            console.log('Vamos a verificar algo');
-            console.log(order.get_orderlines());
+
             order.get_orderlines().forEach((x) => {
-              console.log('');
-              console.log(x.get_price_without_tax());
-              console.log(x.get_tax_details());
 
               for (let key in x.get_tax_details()) {
-                console.log('key');
-                console.log(key);
                 if(x.get_tax_details()[key]>0){
                   new_total_order += x.get_price_with_tax();
                 }
               }
 
-
-
-              console.log('');
-              console.log('');
             })
-            // .get_price_without_tax()
-            console.log('');
-            console.log('');
-            console.log('');
-            console.log('new_total_order');
-            console.log(new_total_order);
             factura_monto_grabado = new_total_order - factura_monto_iva;
 
           }else{
@@ -271,7 +239,7 @@ var PaymentTransact = PaymentInterface.extend({
               'monto_propina':0,
               'operacion':'VTA',
               'tarjeta_id':0,
-              'term_cod':'T00001',
+              'term_cod':term_cod,
           };
 
           if (config.transact_ask_customer_for_tip) {
@@ -308,15 +276,21 @@ var PaymentTransact = PaymentInterface.extend({
     },
 
     _transact_cancel: function (ignore_error) {
+      console.log('_transact_cancel');
+      console.log('');
         var self = this;
         var config = this.pos.config;
         var previous_service_id = this.most_recent_service_id;
         var order = this.pos.get_order();
         var line = order.selected_paymentline;
-        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '';
+        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '', term_cod = '';
         var header = _.extend(this._transact_common_message_header(), {
             'MessageCategory': 'Abort',
         });
+
+        if(order.pos.config.term_cod){
+          term_cod = order.pos.config.term_cod;
+        }
 
         if(order.pos.company.emp_cod){
           emp_cod = order.pos.company.emp_cod
@@ -337,22 +311,31 @@ var PaymentTransact = PaymentInterface.extend({
         var factura_monto_iva = 0;
         var factura_monto_grabado = 0;
 
-        console.log('Para dividir');
-        console.log(order.get_tax_details()[0].tax.amount);
-        console.log(order);
         if(order.get_tax_details().length>1){
 
           order.get_tax_details().forEach((impuesto) => {
               factura_monto_iva += impuesto.amount;
           })
 
-          factura_monto_grabado = order.get_amount_total_with_tax() - factura_monto_iva;
+          order.get_orderlines().forEach((x) => {
+
+            for (let key in x.get_tax_details()) {
+
+              if(x.get_tax_details()[key]>0){
+                new_total_order += x.get_price_with_tax();
+              }
+
+            }
+
+          })
+
+          factura_monto_grabado = new_total_order - factura_monto_iva;
 
         }else{
           if(order.get_tax_details()[0].tax.amount > 0){
+            var calculo_iva = 1 + (order.get_tax_details()[0].tax.amount / 100);
             factura_monto_iva = order.get_tax_details()[0].amount;
             factura_monto_grabado = order.get_total_with_tax() - factura_monto_iva;
-
           }else {
             factura_monto_iva = 0;
             factura_monto_grabado = 0;
@@ -365,16 +348,14 @@ var PaymentTransact = PaymentInterface.extend({
             partner = "true";
         }
 
-        console.log('consumidor final')
-        console.log(partner)
         var data = {
-            'emisor_id':0,
-            'emp_cod':emp_cod,
-            'emp_hash':hash,
-            'factura_consumidor_final':partner,
-            'factura_monto': order.get_total_with_tax() * 100,
-            'factura_monto_gravado': factura_monto_grabado * 100,
-            'factura_monto_iva': factura_monto_iva * 100,
+          'emisor_id':0,
+          'emp_cod':emp_cod,
+          'emp_hash':hash,
+          'factura_consumidor_final':partner,
+          'factura_monto': order.get_total_with_tax() * 100,
+          'factura_monto_gravado': factura_monto_grabado * 100,
+          'factura_monto_iva': factura_monto_iva * 100,
           'factura_nro':factura_nro,
           'moneda_iso':moneda_iso,
           'monto': line.amount * 100,
@@ -382,7 +363,7 @@ var PaymentTransact = PaymentInterface.extend({
           'monto_propina':0,
           'operacion':'VTA',
           'tarjeta_id':0,
-          'term_cod':'T00001',
+          'term_cod':term_cod,
         };
 
         return this._call_transact(data).then(function (data) {
@@ -421,8 +402,6 @@ var PaymentTransact = PaymentInterface.extend({
             return Promise.resolve();
         }
 
-        console.log('Consultar transaccion token');
-        console.log(order.get_TokenNro());
         return rpc.query({
             model: 'pos.payment.method',
             method: 'get_latest_transact_status',
@@ -461,40 +440,18 @@ var PaymentTransact = PaymentInterface.extend({
             console.log('');
             console.log('');
             var error = 'error' in notification;
-            console.log('error in notification');
-            console.log(error);
-            console.log('');
 
             if (notification && error == false){
-                console.log('good notification');
-                console.log(notification['a:Resp_TransaccionFinalizada']);
-                console.log('');
-
-                // var response = notification.SaleToPOIResponse.PaymentResponse.Response;
-                // var additional_response = new URLSearchParams(response.AdditionalResponse);
-                if ('a:Resp_TransaccionFinalizada' in notification && notification['a:Aprobada
-'] == 'true'){
-                    console.log('Transacción finalizada');
-                }
 
                 if ('a:Resp_TokenSegundosReConsultar' in notification && 'a:Resp_TransaccionFinalizada' in notification && notification['a:Resp_TokenSegundosReConsultar'] == '0' && notification['a:Aprobada'] == 'true' ) {
-                  console.log('Buena respuesta');
                   var config = self.pos.config;
                   var metodos_pago = self.pos.payment_methods;
                   var id_pago = 0;
                   var monto_total = 0;
                   var nombre_pago = '';
                   metodos_pago.forEach((m_p) => {
-                    console.log('metodo de pago');
-                    console.log(m_p);
-                    console.log(notification["a:DatosTransaccion"]["a:Extendida"]["a:EmvAppName"]);
-                    console.log(notification["a:TarjetaTipo"]);
-                    console.log("");
-                    console.log("");
                     if("a:DatosTransaccion" in notification && "a:Extendida" in notification["a:DatosTransaccion"] && "a:EmvAppName" in notification["a:DatosTransaccion"]["a:Extendida"] && "a:TarjetaTipo" in notification){
-                      console.log('Dicc primer if ');
                       if(notification["a:DatosTransaccion"]["a:Extendida"]["a:EmvAppName"] == m_p.env_app_name && notification["a:TarjetaTipo"] == m_p.tarjeta_tipo){
-                        console.log("Segundo if");
                         id_pago = m_p.id
                         nombre_pago = m_p.name
                         monto_total = parseFloat(notification["a:DatosTransaccion"]["a:Monto"]);
@@ -505,8 +462,6 @@ var PaymentTransact = PaymentInterface.extend({
                   if(id_pago != 0 ){
                     order.paymentlines.forEach((line) => {
                       if(line.payment_method.use_payment_terminal == "transact" && order.paymentlines[posicion].nuevo_metodo_pago_id == false){
-                        console.log('Supuestamente cambiando el id del pago');
-                        console.log(id_pago);
                         order.paymentlines[posicion].set_nuevo_metodo_pago_id(id_pago);
                         order.paymentlines[posicion].set_nuevo_metodo_pago_nombre(nombre_pago);
                       }
@@ -530,8 +485,6 @@ var PaymentTransact = PaymentInterface.extend({
                 }
             } else if ('error' in notification) {
 
-              console.log('Existe un error :/');
-              console.log('');
               resolve(false);
 
               Gui.showPopup('ErrorPopup',{
@@ -553,24 +506,11 @@ var PaymentTransact = PaymentInterface.extend({
         console.log(response);
         var order = this.pos.get_order();
         if(response && 'tokenNro' in response){
-
           order.set_TokenNro(response['tokenNro']);
-          console.log('get_token');
-          console.log(order.get_TokenNro());
-
         }
-        console.log('');
-        console.log('');
-        console.log('Order en _transact_handle_response');
-        console.log(order);
-        console.log('');
-        console.log('');
+
         var line = this.pending_transact_line();
-        // var tokenNro = this.token_order();
-        // console.log('Obteniendo el token');
-        // console.log(tokenNro);
-        // console.log('');
-        // console.log('');
+
         if (response.error && response.error.status_code != 200) {
             this._show_error(_t('Response code: '+response.error.status_code + ' '+ response.error.message));
             line.set_payment_status('force_done');
@@ -578,12 +518,7 @@ var PaymentTransact = PaymentInterface.extend({
         }
 
         response = response.SaleToPOIRequest;
-        console.log('Response ');
-        console.log(response);
-        console.log('');
         if (response && response.EventNotification && response.EventNotification.EventToNotify == 'Reject') {
-            console.error('error from TRANSACT', response);
-
             var msg = '';
             if (response.EventNotification) {
                 var params = new URLSearchParams(response.EventNotification.EventDetails);
@@ -624,8 +559,8 @@ var PaymentTransact = PaymentInterface.extend({
 
     _show_error: function (msg, title) {
         console.log('the title');
-        // console.log(msg);
-        // console.log(title);
+        console.log(msg);
+        console.log(title);
         if (!title) {
             title =  _t('TRANSACT Error');
         }
@@ -635,19 +570,6 @@ var PaymentTransact = PaymentInterface.extend({
         });
     },
 
-    _call_fields: function(){
-      return rpc.query({
-          model: 'res.company',
-          method: 'customer_fields',
-          args: [[]]
-      },{
-          timeout: 10000,
-          shadow: true,
-      }).catch(function(fields){
-        console.log('Que tal fritos?');
-        console.log(fields);
-      });
-    },
 });
 
 return PaymentTransact;
