@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <record id="pos_transact_inherit_pos_config_view" model="ir.ui.view">
+        <field name="name">pos.transact.inherit.pos.config.view.form</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+          <xpath expr="//div[@id='other_devices']//div[hasclass('o_setting_right_pane')]" position="after">
+            <div class="o_setting_right_pane">
+              <label for="term_cod" string="Terminal code: "/>
+              <field name="term_cod" placeholder="Ingrese el código de la terminal aquí"/>
+            </div>
+
+          </xpath>
+
+        </field>
+    </record>
+  </data>
+</odoo>

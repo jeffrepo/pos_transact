@@ -20,3 +20,8 @@ class PosSession(models.Model):
         result['search_params']['fields'].append('hash')
         result['search_params']['fields'].append('emp_cod')
         return result
+
+    def _loader_params_pos_config_method(self):
+        result = super()._loader_params_pos_config_method()
+        result['search_params']['fields'].append('term_cod')
+        return result
