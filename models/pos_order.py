@@ -17,7 +17,6 @@ class PosOrder(models.Model):
     def _process_payment_lines(self, pos_order, order, pos_session, draft):
         logging.warning('')
         logging.warning('')
-        logging.warning('')
         logging.warning('Heredando una funcion :/ _process_payment_lines')
         logging.warning('')
         logging.warning('')
