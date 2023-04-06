@@ -2,7 +2,7 @@
 
 {
     'name': 'Pos transaction',
-    'version': '1.0',
+    'version': '2.0',
     'category': 'Sales/Point of Sale',
     'sequence': 6,
     'summary': 'Pos transaction',
