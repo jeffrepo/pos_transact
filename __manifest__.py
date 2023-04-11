@@ -8,7 +8,7 @@
     'summary': 'Pos transaction',
     'description': """
 """,
-    'depends': ['base','point_of_sale'],
+    'depends': ['base','point_of_sale','pos_payment_term'],
     'data': [
     'views/pos_payment_method_views.xml',
     'views/res_company_views.xml',
