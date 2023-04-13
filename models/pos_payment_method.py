@@ -25,7 +25,7 @@ class PosPaymentMethod(models.Model):
         return super(PosPaymentMethod, self)._get_payment_terminal_selection() + [('transact', 'Transact')]
 
     # TransAct
-    transact_api_key = fields.Char(string="Transact API key", help='Used when connecting to Adyen: https://docs.adyen.com/user-management/how-to-get-the-api-key/#description', copy=False)
+    # transact_api_key = fields.Char(string="Transact API key", help='Used when connecting to Adyen: https://docs.adyen.com/user-management/how-to-get-the-api-key/#description', copy=False)
     transact_terminal_identifier = fields.Char(help='[Terminal model]-[Serial number], for example: P400Plus-123456789', copy=False)
     transact_test_mode = fields.Boolean(help='Run transactions in the test environment.')
 
@@ -39,6 +39,7 @@ class PosPaymentMethod(models.Model):
     ('DEB','Débito'),
     ('NO_SETEAR', 'No setear')
     ], string="Tipo tarjeta")
+    tarjeta_id = fields.Integer('Tarjeta ID')
     env_app_name = fields.Char(string="Emv App Name")
 
     @api.constrains('transact_terminal_identifier')
