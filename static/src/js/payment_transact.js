@@ -451,7 +451,7 @@ var PaymentTransact = PaymentInterface.extend({
                   var nombre_pago = '';
                   metodos_pago.forEach((m_p) => {
                     if("a:DatosTransaccion" in notification && "a:Extendida" in notification["a:DatosTransaccion"] && "a:EmvAppName" in notification["a:DatosTransaccion"]["a:Extendida"] && "a:TarjetaTipo" in notification){
-                      if(notification["a:DatosTransaccion"]["a:Extendida"]["a:EmvAppName"] == m_p.env_app_name && notification["a:TarjetaTipo"] == m_p.tarjeta_tipo){
+                       if(notification["a:TarjetaTipo"] == m_p.tarjeta_tipo && parseInt(notification["a:TarjetaId"]) == m_p.tarjeta_id){
                         id_pago = m_p.id
                         nombre_pago = m_p.name
                         monto_total = parseFloat(notification["a:DatosTransaccion"]["a:Monto"]);

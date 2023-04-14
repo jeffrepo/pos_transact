@@ -12,6 +12,7 @@ class PosSession(models.Model):
         result['search_params']['fields'].append('no_mostrar_pos')
         result['search_params']['fields'].append('env_app_name')
         result['search_params']['fields'].append('tarjeta_tipo')
+        result['search_params']['fields'].append('tarjeta_id')
         return result
 
     def _loader_params_res_company(self):
