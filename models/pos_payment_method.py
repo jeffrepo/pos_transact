@@ -132,7 +132,10 @@ class PosPaymentMethod(models.Model):
 
         logging.warning('dicc_venta')
         logging.warning(dicc_venta)
+        url = ""
         if dicc_venta and len(dicc_venta)>1:
+            if 'url_conector' in dicc_ventas:
+                url = str(dicc_venta['url_conector'])
             if 'emisor_id' in dicc_venta:
                 # TagEmisorId.text = 'LOL3'
                 TagEmisorId.text = str(dicc_venta['emisor_id'])
@@ -177,7 +180,7 @@ class PosPaymentMethod(models.Model):
             #url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc"
             #url = "https://wwwi.transact.com.uy/Concentrador/TarjetasTransaccion_401.svc?wsdl"
             #url = "https://wwwi.transact.com.uy/Concentrador/TarjetasTransaccion_400.svc?wsdl"
-            url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
+            #url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
 
             headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/PostearTransaccion"}
             response = requests.post(url, data = xmls, headers = headers, timeout = TIMEOUT)
@@ -286,8 +289,8 @@ class PosPaymentMethod(models.Model):
         xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
         xmls_base64 = base64.b64encode(xmls)
 
-        url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
-
+        #url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
+        url = str(self.env.company.url_conector)
         headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/ConsultarTransaccion"}
         response = requests.post(url, data = xmls, headers = headers, timeout = TIMEOUT)
 

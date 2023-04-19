@@ -148,7 +148,7 @@ var PaymentTransact = PaymentInterface.extend({
         var config = this.pos.config;
         var line = order.selected_paymentline;
         var self = this;
-        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '', term_cod = '';
+        var emp_cod = '', hash = '', moneda_iso = '', factura_nro = '', term_cod = '', url_conector = "";;
 
         console.log('_transact_pay_data');
         console.log('');
@@ -164,7 +164,9 @@ var PaymentTransact = PaymentInterface.extend({
 
 
         }else {
-
+          if(order.pos.company.url_conector){
+            url_conector = order.pos.company.url_conector
+          }
           if(order.pos.config.term_cod){
             term_cod = order.pos.config.term_cod;
           }
@@ -240,6 +242,7 @@ var PaymentTransact = PaymentInterface.extend({
               'operacion':'VTA',
               'tarjeta_id':0,
               'term_cod':term_cod,
+              'url_conector': url_conector,
           };
 
           if (config.transact_ask_customer_for_tip) {

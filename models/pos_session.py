@@ -20,6 +20,7 @@ class PosSession(models.Model):
         result['search_params']['fields'].append('moneda_ISO')
         result['search_params']['fields'].append('hash')
         result['search_params']['fields'].append('emp_cod')
+        result['search_params']['fields'].append('url_conector')
         return result
 
     def _loader_params_pos_config_method(self):

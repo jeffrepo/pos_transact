@@ -10,6 +10,7 @@ class ResCompany(models.Model):
     emp_cod = fields.Char('Código de empresa')
     moneda_ISO = fields.Char('Moneda ISO')
     hash = fields.Char('HASH')
+    url_conector = fields.Char('URL Contector')
 
     @api.model
     def customer_fields(self, company=None):
@@ -24,4 +25,5 @@ class ResCompany(models.Model):
         fields['emp_cod'] = company.emp_cod
         fields['moneda_iso'] = company.moneda_ISO
         fields['hash'] = company.hash
+        fields['url_conector'] = company.url_conector
         return fields
