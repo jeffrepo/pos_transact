@@ -149,8 +149,10 @@ class PosPaymentMethod(models.Model):
                 TagFacturaMonto.text = str(dicc_venta['factura_monto'])
             if 'factura_monto_gravado' in dicc_venta:
                 TagFacturaMontoGravado.text = str(dicc_venta['factura_monto_gravado'])
-            if 'monto_iva' in dicc_venta:
-                TagMontoIVA.text = str(dicc_venta['monto_iva'])
+            # if 'monto_iva' in dicc_venta:
+            #     TagMontoIVA.text = str(dicc_venta['monto_iva'])
+            if 'factura_monto_iva' in dicc_venta:
+                TagMontoIVA.text = str(dicc_venta['factura_monto_iva'])            
             if 'factura_nro' in dicc_venta:
                 TagFacturaNro.text = str(dicc_venta['factura_nro'])
             if 'moneda_iso' in dicc_venta:
