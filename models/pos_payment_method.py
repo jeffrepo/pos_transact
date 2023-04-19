@@ -181,7 +181,7 @@ class PosPaymentMethod(models.Model):
             #url = "https://wwwi.transact.com.uy/Concentrador/TarjetasTransaccion_401.svc?wsdl"
             #url = "https://wwwi.transact.com.uy/Concentrador/TarjetasTransaccion_400.svc?wsdl"
             #url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
-
+            url = "https://concentrador01.transact.com.uy:444/TarjetasTransaccion_401.svc?wsdl"
             headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/PostearTransaccion"}
             response = requests.post(url, data = xmls, headers = headers, timeout = TIMEOUT)
 
@@ -290,7 +290,8 @@ class PosPaymentMethod(models.Model):
         xmls_base64 = base64.b64encode(xmls)
 
         #url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
-        url = str(self.env.company.url_conector)
+        #url = str(self.env.company.url_conector)
+        url = "https://concentrador01.transact.com.uy:444/TarjetasTransaccion_401.svc?wsdl"
         headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/ConsultarTransaccion"}
         response = requests.post(url, data = xmls, headers = headers, timeout = TIMEOUT)
 
