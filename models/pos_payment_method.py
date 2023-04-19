@@ -182,7 +182,9 @@ class PosPaymentMethod(models.Model):
             #url = "https://wwwi.transact.com.uy/Concentrador/TarjetasTransaccion_400.svc?wsdl"
             #url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
             url = "https://concentrador01.transact.com.uy:444/TarjetasTransaccion_401.svc?wsdl"
-            headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/PostearTransaccion"}
+            #headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/PostearTransaccion"}
+            headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "https://concentrador01.transact.com.uy:444/TarjetasTransaccion_401.svc?wsdl"}
+
             response = requests.post(url, data = xmls, headers = headers, timeout = TIMEOUT)
 
             logging.warning('First xml')
@@ -292,7 +294,9 @@ class PosPaymentMethod(models.Model):
         #url = "https://wwwi.transact.com.uy/ConcentradorV402/TarjetasTransaccion_402.svc?wsdl"
         #url = str(self.env.company.url_conector)
         url = "https://concentrador01.transact.com.uy:444/TarjetasTransaccion_401.svc?wsdl"
-        headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/ConsultarTransaccion"}
+        #headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "http://tempuri.org/ITarjetasTransaccion_402/ConsultarTransaccion"}
+        headers = {"content-type": "text/xml; charset=utf-8", 'SOAPAction': "https://concentrador01.transact.com.uy:444/TarjetasTransaccion_401.svc?wsdl"}
+
         response = requests.post(url, data = xmls, headers = headers, timeout = TIMEOUT)
 
         logging.warning('First xml consult_transAct')
