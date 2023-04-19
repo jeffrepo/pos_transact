@@ -134,7 +134,7 @@ class PosPaymentMethod(models.Model):
         logging.warning(dicc_venta)
         url = ""
         if dicc_venta and len(dicc_venta)>1:
-            if 'url_conector' in dicc_ventas:
+            if 'url_conector' in dicc_venta:
                 url = str(dicc_venta['url_conector'])
             if 'emisor_id' in dicc_venta:
                 # TagEmisorId.text = 'LOL3'
